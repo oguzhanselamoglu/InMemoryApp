@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +24,20 @@ var summaries = new[]
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/index", (IMemoryCache _memoryCache) => _memoryCache.Set<string>("date", DateTime.Now.ToString()));
+app.MapGet("/index", (IMemoryCache _memoryCache) =>
+{
+    string date = "";
+    if (!_memoryCache.TryGetValue<string>("date",out date))
+    {
+        MemoryCacheEntryOptions opt = new();
+        opt.AbsoluteExpiration = DateTime.Now.AddSeconds(30);
+        //ömrünü 10 sn artırır
+        //opt.SlidingExpiration = DateTime.Now.AddSeconds(10);
+        date = DateTime.Now.ToString();
+        _memoryCache.Set<string>("date",date,opt);
+    }
+    return date;
+ });
 
 app.MapGet("/show", (IMemoryCache _memoryCache) => _memoryCache.Get<string>("date"));
 
